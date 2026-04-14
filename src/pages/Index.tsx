@@ -179,7 +179,6 @@ const Index = () => {
             onConfirmDeletePOE={store.deletePOE}
             onCancelDeletePOE={() => store.setPendingDeletePoe(null)}
             onMarkEngagement={handleMarkEngagement}
-            timelineOpenFor={timelineOpenFor}
             onToggleTimeline={toggleTimeline}
             onCloseTimeline={(cid: string) => {
               setTimelineOpenFor(prev => prev === cid ? null : prev);
