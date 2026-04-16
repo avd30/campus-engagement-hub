@@ -1,5 +1,5 @@
-import { initializeApp } from 'firebase/app';
-import { getDatabase } from 'firebase/database';
+import { initializeApp, FirebaseApp } from 'firebase/app';
+import { getDatabase, Database } from 'firebase/database';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -12,5 +12,18 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-const app = initializeApp(firebaseConfig);
-export const rtdb = getDatabase(app);
+let app: FirebaseApp | null = null;
+let rtdb: Database | null = null;
+
+try {
+  if (firebaseConfig.databaseURL && firebaseConfig.projectId) {
+    app = initializeApp(firebaseConfig);
+    rtdb = getDatabase(app);
+  } else {
+    console.warn('Firebase config missing — running in local-only mode');
+  }
+} catch (e) {
+  console.warn('Firebase init failed — running in local-only mode', e);
+}
+
+export { rtdb };

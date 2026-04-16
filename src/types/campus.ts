@@ -14,7 +14,7 @@ export interface POE {
   type: string;
   customType?: string;
   eventDetail: string;
-  date: string;
+  date: string; // startDate (kept as 'date' for backward compat)
   endDate?: string;
   link: string;
   pocName: string;
@@ -110,7 +110,7 @@ export const STREAM_TIERS: Record<string, string[]> = {
   Management: ['IIM', 'Others'],
 };
 
-export const STATUS_COLORS: Record<string, { bg: string; tx: string; label: string }> = {
+export const STATUS_COLORS: Record<EngagementStatus, { bg: string; tx: string; label: string }> = {
   planned: { bg: 'hsl(217 91% 60%)', tx: '#fff', label: 'Planned' },
   done: { bg: 'hsl(142 71% 45%)', tx: '#fff', label: 'Done' },
   not_done: { bg: 'hsl(0 84% 60%)', tx: '#fff', label: 'Not Done' },
@@ -133,7 +133,8 @@ export function migratePOE(p: any): POE {
     reminderLeadDays: p.reminderLeadDays || 60,
     endDate: p.endDate || '',
     assignedTo: p.assignedTo || '',
-    report: p.report || undefined,
+    report: p.report || '',
+    notes: p.notes || '',
     createdAt: p.createdAt || new Date().toISOString(),
     updatedAt: p.updatedAt || new Date().toISOString(),
   };

@@ -28,9 +28,9 @@ export default function RemindersPanel({ colleges, onSelectEngagement }: Reminde
   if (reminders.length === 0) {
     return (
       <div className="bg-surface border border-border rounded-2xl p-4">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-semibold text-foreground">Reminders</span>
-          <span className="text-[10px] bg-muted text-muted-foreground rounded-full px-2 py-0.5">0 Due</span>
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-sm font-semibold">Reminders</span>
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">0 Due</span>
         </div>
         <p className="text-xs text-muted-foreground text-center py-4">No reminders due 🎉</p>
       </div>
@@ -39,32 +39,34 @@ export default function RemindersPanel({ colleges, onSelectEngagement }: Reminde
 
   return (
     <div className="bg-surface border border-border rounded-2xl p-4">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-semibold text-foreground">Reminders</span>
-        <span className="text-[10px] bg-destructive-light text-destructive rounded-full px-2 py-0.5 font-medium">{reminders.length} Due</span>
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-sm font-semibold">Reminders</span>
+        <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive text-destructive-foreground font-semibold">{reminders.length} Due</span>
       </div>
-      <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto">
+      <div className="space-y-2 max-h-[280px] overflow-y-auto">
         {reminders.map(r => {
           const t = getPOEType(r.poe);
           const statusInfo = STATUS_COLORS[r.poe.status as keyof typeof STATUS_COLORS];
           return (
-            <div key={`${r.cid}-${r.pid}`}>
-              <button
-                onClick={() => onSelectEngagement(r.cid, r.pid)}
-                className="flex items-start gap-3 p-3 rounded-xl bg-background border border-border cursor-pointer hover:border-primary-mid hover:shadow-sm transition-all w-full text-left"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-medium text-foreground truncate">{r.poe.eventDetail || t.label}</div>
-                  <div className="text-[10px] text-muted-foreground truncate">{r.collegeName}</div>
-                  <div className="text-[10px] text-muted-foreground">
+            <div
+              key={r.pid}
+              onClick={() => onSelectEngagement(r.cid, r.pid)}
+              className="flex items-start gap-3 p-3 rounded-xl bg-background border border-border cursor-pointer hover:border-primary-mid hover:shadow-sm transition-all"
+            >
+              <div className="w-1 self-stretch rounded-full flex-shrink-0" style={{ background: t.tx }} />
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-semibold truncate">{r.poe.eventDetail || t.label}</div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">{r.collegeName}</div>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-[10px] text-muted-foreground">
                     {formatDate(r.poe.date)}{r.poe.endDate ? ` – ${formatDate(r.poe.endDate)}` : ''}
-                  </div>
-                  {r.poe.assignedTo && <span className="text-[10px] text-muted-foreground"> · {r.poe.assignedTo}</span>}
+                  </span>
+                  {r.poe.assignedTo && <span className="text-[10px] text-muted-foreground">· {r.poe.assignedTo}</span>}
                 </div>
-                <span className={`text-[10px] font-medium rounded-full px-2 py-0.5 whitespace-nowrap ${r.daysUntil <= 0 ? 'bg-destructive-light text-destructive' : 'bg-primary-light text-primary'}`}>
-                  {r.daysUntil <= 0 ? 'Overdue' : `${r.daysUntil}d left`}
-                </span>
-              </button>
+              </div>
+              <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: statusInfo.bg, color: statusInfo.tx }}>
+                {r.daysUntil <= 0 ? 'Overdue' : `${r.daysUntil}d left`}
+              </span>
             </div>
           );
         })}

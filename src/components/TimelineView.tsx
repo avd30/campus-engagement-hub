@@ -6,7 +6,11 @@ interface TimelineViewProps {
   selectedPoeId?: string | null;
 }
 
-const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
 const AY_MONTH_ORDER = [3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2];
 
 function dateToAYPct(d: Date): number {
@@ -28,12 +32,13 @@ export default function TimelineView({ poes, onSelectPOE, selectedPoeId }: Timel
 
   if (events.length === 0) {
     return (
-      <div className="bg-background border border-border rounded-xl p-6 text-center">
-        <p className="text-xs text-muted-foreground">No engagements with dates to display on the timeline.</p>
+      <div className="p-6 text-center text-xs text-muted-foreground">
+        No engagements with dates to display on the timeline.
       </div>
     );
   }
 
+  // Assign stagger levels
   const positioned = (() => {
     const aboveBuckets: { leftPct: number; rightPct: number; level: number }[] = [];
     const belowBuckets: { leftPct: number; rightPct: number; level: number }[] = [];
@@ -68,16 +73,16 @@ export default function TimelineView({ poes, onSelectPOE, selectedPoeId }: Timel
   const totalHeight = barY + 6 + belowSpace + 10;
 
   return (
-    <div className="overflow-x-auto pb-2">
-      <div className="relative min-w-[700px]" style={{ height: totalHeight }}>
+    <div className="p-4 overflow-x-auto">
+      <div className="relative min-w-[800px]" style={{ height: `${totalHeight}px` }}>
         {/* Month labels */}
-        <div className="absolute top-0 left-0 right-0 flex" style={{ height: 16 }}>
+        <div className="absolute left-0 right-4 flex" style={{ top: `${barY - 18}px` }}>
           {AY_MONTH_ORDER.map((mIdx, i) => {
             const segWidth = 100 / 12;
             const left = i * segWidth;
             return (
-              <div key={mIdx} className="absolute text-[9px] text-muted-foreground font-medium" style={{ left: `${left}%`, width: `${segWidth}%`, textAlign: 'center' }}>
-                {MONTH_NAMES[mIdx].slice(0, 3)}
+              <div key={mIdx} className="absolute text-center" style={{ left: `${left}%`, width: `${segWidth}%` }}>
+                <span className="text-[10px] font-semibold text-muted-foreground">{MONTH_NAMES[mIdx].slice(0, 3)}</span>
               </div>
             );
           })}
@@ -85,14 +90,16 @@ export default function TimelineView({ poes, onSelectPOE, selectedPoeId }: Timel
 
         {/* Month ticks */}
         {AY_MONTH_ORDER.map((_, i) => (
-          <div key={i} className="absolute w-px bg-border/60" style={{ left: `${(i * 100) / 12}%`, top: 16, bottom: 10 }} />
+          <div key={`tick-${i}`} className="absolute" style={{ left: `${(i * 100) / 12}%`, top: `${barY - 6}px`, width: '1px', height: '18px', background: 'hsl(var(--primary-mid))', opacity: 0.5 }} />
         ))}
+        <div className="absolute" style={{ left: '100%', top: `${barY - 6}px`, width: '1px', height: '18px', background: 'hsl(var(--primary-mid))', opacity: 0.5 }} />
 
         {/* The colored bar */}
-        <div className="absolute left-0 right-0 rounded-full overflow-hidden flex" style={{ top: barY, height: 6 }}>
+        <div className="absolute left-0 right-0 flex rounded-full overflow-hidden" style={{ top: `${barY}px`, height: '6px' }}>
           {AY_MONTH_ORDER.map((_, i) => (
-            <div key={i} className={`flex-1 ${i % 2 === 0 ? 'bg-primary/20' : 'bg-primary/10'}`} />
+            <div key={i} className="h-full" style={{ width: `${100 / 12}%`, background: i < 4 ? 'hsl(var(--primary-light))' : i < 8 ? 'hsl(var(--primary-mid))' : 'hsl(var(--primary))', opacity: 0.5 + (i / 12) * 0.5 }} />
           ))}
+          <div className="absolute right-[-8px] top-1/2 -translate-y-1/2" style={{ width: 0, height: 0, borderTop: '7px solid transparent', borderBottom: '7px solid transparent', borderLeft: '9px solid hsl(var(--primary))' }} />
         </div>
 
         {/* Events */}
@@ -113,20 +120,27 @@ export default function TimelineView({ poes, onSelectPOE, selectedPoeId }: Timel
           return (
             <div key={ev.poe.id}>
               {/* Connector */}
-              <div className="absolute w-px bg-border" style={{ left: `${clampedLeft}%`, top: connectorTop, height: connectorHeight }} />
+              <div className="absolute" style={{ left: `${clampedLeft}%`, top: `${connectorTop}px`, height: `${Math.max(connectorHeight, 0)}px`, width: '2px', background: t.tx, opacity: 0.3, transform: 'translateX(50%)' }} />
               {/* Dot */}
-              <div className="absolute w-2 h-2 rounded-full -translate-x-1/2" style={{ left: `${clampedLeft}%`, top: barY + (ev.above ? -1 : 6), background: sc.bg }} />
+              <div className="absolute rounded-full border-2" style={{ borderColor: sc.bg, background: sc.bg, left: `${clampedLeft}%`, top: `${barY - 4}px`, width: '12px', height: '12px', transform: 'translateX(-3px)' }} />
               {/* Card */}
               <div
-                className={`absolute w-[120px] rounded-lg p-1.5 cursor-pointer transition-all border ${isSelected ? 'ring-2 ring-primary shadow-md border-primary' : 'border-border hover:shadow-sm hover:border-primary-mid'}`}
-                style={{ left: `${clampedLeft}%`, top: topPos, height: cardHeight, background: 'hsl(var(--surface))' }}
+                className={`absolute rounded-xl shadow-sm px-2.5 py-1.5 text-center cursor-pointer transition-all z-10 ${isSelected ? 'ring-2 ring-primary scale-105' : 'hover:scale-105 hover:shadow-md'}`}
+                style={{
+                  left: ev.isMultiDay ? `${clampedLeft}%` : `${clampedLeft}%`,
+                  width: ev.isMultiDay ? `${Math.max(ev.rightPct - ev.leftPct, 8)}%` : undefined,
+                  minWidth: ev.isMultiDay ? undefined : '100px',
+                  top: `${topPos}px`,
+                  transform: ev.isMultiDay ? undefined : 'translateX(-50%)',
+                  background: t.bg,
+                  color: t.tx,
+                  border: `1.5px solid ${sc.bg}`,
+                }}
                 onClick={() => onSelectPOE(ev.poe.id)}
               >
-                <div className="flex items-center gap-1">
-                  <span className="rounded px-1 py-px text-[8px] font-medium truncate" style={{ background: t.bg, color: t.tx }}>{t.label}</span>
-                </div>
-                {ev.poe.eventDetail && <div className="text-[8px] text-foreground truncate mt-0.5">{ev.poe.eventDetail}</div>}
-                <div className="text-[8px] text-muted-foreground mt-0.5">{dateLabel}</div>
+                <div className="text-[10px] font-semibold leading-tight truncate">{t.label}</div>
+                {ev.poe.eventDetail && <div className="text-[9px] leading-tight mt-[1px] truncate">{ev.poe.eventDetail}</div>}
+                <div className="text-[8px] mt-[1px] opacity-70">{dateLabel}</div>
               </div>
             </div>
           );

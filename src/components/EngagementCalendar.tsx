@@ -6,7 +6,11 @@ interface EngagementCalendarProps {
   onSelectCollege: (cid: string, pid: string) => void;
 }
 
-const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
 const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 function getDaysInMonth(year: number, month: number) {
@@ -53,13 +57,19 @@ export default function EngagementCalendar({ colleges, onSelectCollege }: Engage
     return list;
   }, [colleges]);
 
+  // Build day -> events map for the current month (handling multi-day spans)
   const dayEventsMap = useMemo(() => {
     const map: Record<number, CalendarEvent[]> = {};
     const monthStart = new Date(year, month, 1);
     const monthEnd = new Date(year, month + 1, 0);
 
     events.forEach(ev => {
+      // Check if event overlaps with this month
       if (ev.endDate < monthStart || ev.startDate > monthEnd) return;
+      const start = Math.max(ev.startDate.getDate(), ev.startDate < monthStart ? 1 : ev.startDate.getDate());
+      const end = Math.min(ev.endDate > monthEnd ? monthEnd.getDate() : ev.endDate.getDate(), monthEnd.getDate());
+      
+      // Only add to the first day in this month (for rendering as a span)
       const startDay = ev.startDate.getMonth() === month && ev.startDate.getFullYear() === year ? ev.startDate.getDate() : 1;
       if (!map[startDay]) map[startDay] = [];
       map[startDay].push(ev);
@@ -87,22 +97,25 @@ export default function EngagementCalendar({ colleges, onSelectCollege }: Engage
   const statusColor = (s: EngagementStatus) => STATUS_COLORS[s] || STATUS_COLORS.planned;
 
   return (
-    <div className="bg-surface border border-border rounded-2xl p-4">
-      <div className="flex items-center justify-between mb-3">
-        <button onClick={prevMonth} className="bg-transparent border-none text-foreground cursor-pointer text-lg hover:text-primary">‹</button>
-        <span className="text-sm font-semibold text-foreground">{MONTH_NAMES[month]} {year}</span>
-        <button onClick={nextMonth} className="bg-transparent border-none text-foreground cursor-pointer text-lg hover:text-primary">›</button>
+    <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-sm">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground">
+        <button onClick={prevMonth} className="text-primary-foreground bg-transparent border-none cursor-pointer text-lg font-bold hover:opacity-70 px-2">‹</button>
+        <span className="text-sm font-semibold">{MONTH_NAMES[month]} {year}</span>
+        <button onClick={nextMonth} className="text-primary-foreground bg-transparent border-none cursor-pointer text-lg font-bold hover:opacity-70 px-2">›</button>
       </div>
 
-      <div className="grid grid-cols-7 gap-0">
+      {/* Day headers */}
+      <div className="grid grid-cols-7">
         {DAY_NAMES.map((d) => (
-          <div key={d} className="text-center py-1">
-            <span className="text-[10px] text-muted-foreground font-medium">{d}</span>
+          <div key={d} className="text-center text-[10px] font-semibold py-1.5 bg-primary-light text-primary-dark">
+            {d}
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-0">
+      {/* Days grid */}
+      <div className="grid grid-cols-7">
         {cells.map((day, i) => {
           const key = day ? `${year}-${month}-${day}` : `empty-${i}`;
           const eventsForDay = day ? dayEventsMap[day] : undefined;
@@ -110,12 +123,13 @@ export default function EngagementCalendar({ colleges, onSelectCollege }: Engage
           const MAX_VISIBLE = 2;
 
           return (
-            <div key={key} className="min-h-[60px] border border-border/50 p-0.5">
+            <div
+              key={key}
+              className={`min-h-[68px] border-b border-r border-border p-1 ${day ? 'bg-surface' : 'bg-muted/30'} ${isToday ? 'ring-1 ring-inset ring-primary' : ''}`}
+            >
               {day && (
                 <>
-                  <div className={`text-[10px] font-medium mb-0.5 text-center ${isToday ? 'bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center mx-auto' : 'text-muted-foreground'}`}>
-                    {day}
-                  </div>
+                  <div className={`text-[11px] mb-0.5 ${isToday ? 'font-bold text-primary' : 'text-muted-foreground'}`}>{day}</div>
                   {eventsForDay?.slice(0, MAX_VISIBLE).map((ev, ei) => {
                     const sc = statusColor(ev.status);
                     return (
@@ -131,9 +145,7 @@ export default function EngagementCalendar({ colleges, onSelectCollege }: Engage
                     );
                   })}
                   {eventsForDay && eventsForDay.length > MAX_VISIBLE && (
-                    <div className="text-[8px] text-muted-foreground text-center">
-                      +{eventsForDay.length - MAX_VISIBLE} more
-                    </div>
+                    <div className="text-[8px] text-muted-foreground font-medium px-1">+{eventsForDay.length - MAX_VISIBLE} more</div>
                   )}
                 </>
               )}

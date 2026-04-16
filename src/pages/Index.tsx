@@ -31,12 +31,30 @@ const Index = () => {
     setTimelineOpenFor(prev => prev === cid ? null : cid);
   }, []);
 
+  const handleToggleRow = useCallback((cid: string) => {
+    // If collapsing the row, also close its timeline
+    if (store.expandedRow === cid) {
+      setTimelineOpenFor(prev => prev === cid ? null : prev);
+    }
+    store.toggleRow(cid);
+  }, [store]);
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     const list = store.db.filter(c => {
       if (q && !c.name.toLowerCase().includes(q) && !(c.notes || '').toLowerCase().includes(q)) return false;
       if (streamFilter && c.stream !== streamFilter) return false;
-      if (tierFilter && c.tier !== tierFilter) return false;
+      if (tierFilter) {
+        if (tierFilter === 'premier_iim') {
+          if (streamFilter === 'Engineering' && c.tier !== 'Premier') return false;
+          if (streamFilter === 'Management' && c.tier !== 'IIM') return false;
+          if (!streamFilter && c.tier !== 'Premier' && c.tier !== 'IIM') return false;
+        } else if (tierFilter === 'tier1_others') {
+          if (streamFilter === 'Engineering' && c.tier !== 'Tier 1') return false;
+          if (streamFilter === 'Management' && c.tier !== 'Others') return false;
+          if (!streamFilter && c.tier !== 'Tier 1' && c.tier !== 'Others') return false;
+        }
+      }
       if (statusFilter) {
         const hasStatus = c.poes.some(p => p.status === statusFilter);
         if (!hasStatus) return false;
@@ -113,6 +131,13 @@ const Index = () => {
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
     ws['!cols'] = headers.map(() => ({ wch: 18 }));
+    for (let c = 0; c < headers.length; c++) {
+      const cellRef = XLSX.utils.encode_cell({ r: 0, c });
+      if (ws[cellRef]) {
+        ws[cellRef].s = { font: { bold: true }, fill: { fgColor: { rgb: "D9E1F2" } }, border: { bottom: { style: "thin" } } };
+      }
+    }
+    ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rows.length, c: headers.length - 1 } }) };
     XLSX.utils.book_append_sheet(wb, ws, 'Campus Engagements');
     XLSX.writeFile(wb, `campusconnect-${new Date().toISOString().slice(0, 10)}.xlsx`);
     store.toast('Excel file exported');
@@ -121,30 +146,29 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <TopBar onExportJSON={exportJSON} onImport={() => setImportOpen(true)} onExportCSV={exportCSV} />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-        <div className="flex items-center justify-between mb-4">
+      <div className="max-w-main mx-auto p-3 sm:p-6">
+        <div className="flex items-start justify-between mb-5 flex-wrap gap-3">
           <div>
-            <h1 className="text-lg font-bold text-foreground">Campus engagement tracker</h1>
-            <p className="text-[11px] text-muted-foreground">{store.db.length} college{store.db.length !== 1 ? 's' : ''} tracked · AY 2024-25 · Data synced via Firebase</p>
+            <h1 className="text-[18px] sm:text-xl font-semibold text-foreground tracking-tight">Campus engagement tracker</h1>
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-[3px]">{store.db.length} college{store.db.length !== 1 ? 's' : ''} tracked · AY 2024-25 · Data saved in your browser</p>
           </div>
-          <button onClick={() => setCollegeModal({ open: true, college: null })} className="px-4 py-2 rounded-xl text-xs font-medium bg-primary text-primary-foreground border border-primary hover:bg-primary-dark shadow-sm cursor-pointer">+ Add college</button>
+          <button onClick={() => setCollegeModal({ open: true, college: null })} className="px-4 py-2 rounded-xl text-xs font-medium bg-primary text-primary-foreground border border-primary hover:bg-primary-dark shadow-sm">+ Add college</button>
         </div>
 
         {/* Desktop: Stats + Reminders (left) | Calendar (right) */}
-        <div className="hidden sm:grid sm:grid-cols-[1fr_1fr] gap-4 mb-4">
-          <div className="flex flex-col gap-4">
-            <StatsBar db={store.db} />
+        <div className="hidden sm:grid sm:grid-cols-[340px_1fr] gap-4 mb-5">
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-[10px]">
+              <StatsBar db={store.db} variant="compact" />
+            </div>
             <RemindersPanel colleges={store.db} onSelectEngagement={handleCalendarSelect} />
           </div>
           <EngagementCalendar colleges={store.db} onSelectCollege={handleCalendarSelect} />
         </div>
 
         {/* Mobile: stacked */}
-        <div className="sm:hidden flex flex-col gap-3 mb-4">
-          <div className="grid grid-cols-2 gap-2">
-            <StatsBar db={store.db} variant="compact" />
-          </div>
+        <div className="sm:hidden mb-5 space-y-3">
+          <StatsBar db={store.db} />
           <RemindersPanel colleges={store.db} onSelectEngagement={handleCalendarSelect} />
           <EngagementCalendar colleges={store.db} onSelectCollege={handleCalendarSelect} />
         </div>
@@ -157,7 +181,6 @@ const Index = () => {
             selectedPoe={store.selectedPoe}
             pendingDeleteCollege={store.pendingDeleteCollege}
             pendingDeletePoe={store.pendingDeletePoe}
-            timelineOpenFor={timelineOpenFor}
             search={search}
             streamFilter={streamFilter}
             tierFilter={tierFilter}
@@ -166,7 +189,7 @@ const Index = () => {
             onStreamChange={setStreamFilter}
             onTierChange={setTierFilter}
             onStatusChange={setStatusFilter}
-            onToggleRow={store.toggleRow}
+            onToggleRow={handleToggleRow}
             onSelectPOE={store.selectPOE}
             onAddCollege={() => setCollegeModal({ open: true, college: null })}
             onEditCollege={cid => setCollegeModal({ open: true, college: store.db.find(c => c.id === cid) || null })}
@@ -179,6 +202,7 @@ const Index = () => {
             onConfirmDeletePOE={store.deletePOE}
             onCancelDeletePOE={() => store.setPendingDeletePoe(null)}
             onMarkEngagement={handleMarkEngagement}
+            timelineOpenFor={timelineOpenFor}
             onToggleTimeline={toggleTimeline}
             onCloseTimeline={(cid: string) => {
               setTimelineOpenFor(prev => prev === cid ? null : prev);
@@ -187,7 +211,6 @@ const Index = () => {
           />
         </div>
       </div>
-
       <CollegeModal
         open={collegeModal.open}
         onClose={() => setCollegeModal({ open: false, college: null })}

@@ -1,4 +1,4 @@
-import { College } from '@/types/campus';
+import { College, STATUS_COLORS } from '@/types/campus';
 
 interface StatsBarProps {
   db: College[];
@@ -25,10 +25,13 @@ export default function StatsBar({ db, variant }: StatsBarProps) {
     return (
       <>
         {stats.map(s => (
-          <div key={s.label} className="bg-surface border border-border rounded-xl p-3">
-            <div className="text-[10px] text-muted-foreground font-medium mb-1">{s.icon} {s.label}</div>
-            <div className="text-lg font-bold text-foreground leading-none">{s.val}</div>
-            <div className="text-[10px] text-muted-foreground mt-0.5">{s.sub}</div>
+          <div key={s.label} className="bg-surface border border-border rounded-2xl p-3 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className="text-sm">{s.icon}</span>
+              <span className="text-[11px] text-muted-foreground">{s.label}</span>
+            </div>
+            <div className="text-[22px] font-bold text-foreground tracking-tight">{s.val}</div>
+            <div className="text-[10px] text-text-hint mt-[2px]">{s.sub}</div>
           </div>
         ))}
       </>
@@ -36,16 +39,17 @@ export default function StatsBar({ db, variant }: StatsBarProps) {
   }
 
   return (
-    <div className="bg-surface border border-border rounded-2xl p-4">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {stats.map(s => (
-          <div key={s.label} className="text-center">
-            <div className="text-[10px] text-muted-foreground font-medium mb-1">{s.icon} {s.label}</div>
-            <div className="text-xl font-bold text-foreground leading-none">{s.val}</div>
-            <div className="text-[10px] text-muted-foreground mt-0.5">{s.sub}</div>
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-5 sm:mb-5">
+      {stats.map(s => (
+        <div key={s.label} className="bg-surface border border-border rounded-2xl p-3 sm:px-4 sm:py-3 shadow-sm">
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="text-sm">{s.icon}</span>
+            <span className="text-[11px] text-muted-foreground">{s.label}</span>
           </div>
-        ))}
-      </div>
+          <div className="text-[22px] font-bold text-foreground tracking-tight">{s.val}</div>
+          <div className="text-[10px] text-text-hint mt-[2px]">{s.sub}</div>
+        </div>
+      ))}
     </div>
   );
 }

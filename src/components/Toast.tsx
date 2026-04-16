@@ -5,7 +5,7 @@ interface ToastProps {
 export default function Toast({ message }: ToastProps) {
   if (!message) return null;
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-foreground text-background px-5 py-2.5 rounded-xl text-xs font-medium shadow-lg z-[9999] animate-in fade-in slide-in-from-bottom-4">
+    <div className="fixed bottom-6 right-6 bg-foreground text-primary-foreground px-[18px] py-[10px] rounded-sm text-xs font-medium z-[2000] animate-in fade-in slide-in-from-bottom-2">
       {message}
     </div>
   );
