@@ -1,7 +1,7 @@
 // src/lib/appsScript.ts
 import { College } from '@/types/campus';
 
-export const API_URL = 'https://script.google.com/macros/s/AKfycbwgEB6xIPfaeiW1Araflxx4GJM267cCGUZ-PkGp7oBLp_OcQzbK4KE7OILrrEbKBcjI/exec';
+export const API_URL = '/.netlify/functions/database';
 
 export async function fetchColleges(): Promise<College[]> {
   // Add redirect: 'follow' here to handle Google's 302 redirect
