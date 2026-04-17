@@ -22,7 +22,7 @@ const INITIAL_DATA: College[] = [
 
 // ── MIGRATION ────────────────────────────────────────────────────────────────
 function migrateData(colleges: College[]): College[] {
-  return colleges.map(c => ({ ...c, poes:( c.poes || []).map(migratePOE) }));
+  return colleges.map(c => ({ ...c, poes: c.poes.map(migratePOE) }));
 }
 
 // ── STORE ────────────────────────────────────────────────────────────────────
